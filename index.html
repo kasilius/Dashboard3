@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مختبر ناصر العطية الذكي</title>
+    
+    <!-- مكتبات خارجية مستقرة للعمل على GitHub -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Changa:wght@400;700&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --ai-bg-active: #cce9ff; 
+            --ai-text-active: #004a77; 
+            --border-color: #eef2f6;
+            --sidebar-width: 350px;
+        }
+
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Tajawal', sans-serif; background-color: #fff; overflow: hidden; }
+        #app { display: flex; height: 100vh; width: 100vw; }
+
+        .sidebar {
+            width: var(--sidebar-width); background: #ffffff;
+            border-left: 1px solid var(--border-soft); display: flex; flex-direction: column;
+            transition: 0.3s ease; z-index: 100;
+        }
+        .sidebar-hidden { width: 0 !important; transform: translateX(100%); opacity: 0; visibility: hidden; }
+
+        .header { padding: 25px; text-align: center; border-bottom: 1px solid var(--border-color); }
+        .header h2 { font-family: 'Changa', sans-serif; color: var(--ai-text-active); margin: 0; font-size: 1.2rem; }
+
+        .goals-list { flex: 1; padding: 20px; overflow-y: auto; }
+        .goal-card {
+            border: 1px solid var(--border-color); border-radius: 15px;
+            margin-bottom: 12px; cursor: pointer; transition: 0.3s; background: #fafafa;
+        }
+        .goal-card.active { border-color: var(--ai-bg-active); background: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
+        .goal-label { 
+            padding: 15px; display: flex; justify-content: space-between; align-items: center;
+            color: var(--ai-text-active); font-weight: bold; font-size: 0.9rem;
+        }
+
+        .goal-content { 
+            padding: 15px; border-top: 1px dashed var(--ai-bg-active); 
+            background: #fff; border-radius: 0 0 15px 15px;
+        }
+
+        .font-tool {
+            margin-top: 10px; padding: 10px; background: var(--ai-bg-active); 
+            border-radius: 10px; display: flex; align-items: center; gap: 10px;
+        }
+        input[type="range"] { flex: 1; accent-color: var(--ai-text-active); }
+
+        .content { flex: 1; display: flex; flex-direction: column; position: relative; transition: 0.3s; }
+        .tabs-bar { background: #fff; padding: 15px; display: flex; gap: 10px; border-bottom: 1px solid var(--border-color); }
+
+        .tab-btn { 
+            padding: 10px 25px; border: none; background: transparent; color: #5f6368;
+            cursor: pointer; border-radius: 50px; font-weight: 700; transition: 0.2s;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .tab-btn.active { 
+            background-color: var(--ai-bg-active) !important; 
+            color: var(--ai-text-active) !important; 
+        }
+        .tab-btn.active::before { content: '✦'; color: var(--ai-text-active); }
+
+        .floating-tools { position: fixed; bottom: 20px; left: 20px; display: flex; gap: 10px; z-index: 1000; align-items: center; }
+        .tool-btn { width: 45px; height: 45px; border-radius: 50%; background: var(--ai-text-active); color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .color-picker { width: 35px; height: 35px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; overflow: hidden; padding: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+        .iframe-stage { flex: 1; padding: 15px; background: #f5f7f9; position: relative; }
+        iframe { width: 100%; height: 100%; border-radius: 20px; border: 1px solid var(--border-color); background: #fff; }
+        canvas { position: absolute; top: 15px; left: 15px; width: calc(100% - 30px); height: calc(100% - 30px); z-index: 50; pointer-events: none; border-radius: 20px; }
+        canvas.active { pointer-events: auto; cursor: crosshair; }
+
+        .toggle-sidebar { position: absolute; top: 50%; right: 0; width: 20px; height: 40px; background: var(--ai-bg-active); border: none; border-radius: 5px 0 0 5px; cursor: pointer; color: var(--ai-text-active); z-index: 101; }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <aside class="sidebar" :class="{'sidebar-hidden': fullWidth}">
+        <div class="header"><h2>{{ lessonTitle }}</h2></div>
+        <div class="goals-list">
+            <div v-for="(goal, i) in goals" :key="i" class="goal-card" :class="{ active: activeGoal === i }">
+                <div class="goal-label" @click="activeGoal = (activeGoal === i ? null : i)">
+                    <span>الهدف {{ i + 1 }}</span>
+                    <span>{{ activeGoal === i ? '▲' : '▼' }}</span>
+                </div>
+                <div v-if="activeGoal === i" class="goal-content animate__animated animate__fadeIn">
+                    <p :style="{ fontSize: gSize + 'px', color: '#1e293b' }">{{ goal }}</p>
+                    <div class="font-tool">
+                        <input type="range" min="14" max="40" v-model="gSize">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="content">
+        <button class="toggle-sidebar" @click="fullWidth = !fullWidth">{{ fullWidth ? '◀' : '▶' }}</button>
+        <nav class="tabs-bar">
+            <button v-for="(tab, i) in tabs" :key="i" @click="currentTab = i" :class="['tab-btn', { active: currentTab === i }]">
+                {{ tab.name }}
+            </button>
+        </nav>
+        <div class="iframe-stage">
+            <iframe :src="tabs[currentTab].url" allowfullscreen></iframe>
+            <canvas id="canvas" :class="{ active: penMode }"></canvas>
+        </div>
+    </main>
+
+    <div class="floating-tools">
+        <input type="color" v-model="penColor" class="color-picker">
+        <button class="tool-btn" :style="{ background: penMode ? '#e11d48' : '' }" @click="penMode = !penMode">✏️</button>
+        <button class="tool-btn" @click="clear">🗑️</button>
+    </div>
+</div>
+
+<script>
+    const { createApp, ref, onMounted } = Vue;
+    createApp({
+        setup() {
+            const lessonTitle = ref('منصة العلوم التفاعلية 🔬');
+            const currentTab = ref(0);
+            const activeGoal = ref(null);
+            const gSize = ref(18);
+            const fullWidth = ref(false);
+            const penMode = ref(false);
+            const penColor = ref('#004a77');
+
+            const tabs = ref([
+                { name: 'المختبر', url: 'https://phet.colorado.edu/sims/html/build-an-atom/latest/build-an-atom_all.html?locale=ar' },
+                { name: 'فيديو التعليم', url: 'https://www.youtube.com/embed/S_I_A7O_YyY' }
+            ]);
+
+            const goals = ref(['تحديد تركيب النواة بدقة وعلاقتها بالكتلة الذرية.', 'شرح الفرق بين النظائر المشعة والمستقرة.', 'رسم التوزيع الإلكتروني للعناصر.']);
+
+            let ctx, canvas;
+            onMounted(() => {
+                canvas = document.getElementById('canvas');
+                ctx = canvas.getContext('2d');
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+                let drawing = false;
+                canvas.addEventListener('mousedown', () => drawing = true);
+                canvas.addEventListener('mouseup', () => { drawing = false; ctx.beginPath(); });
+                canvas.addEventListener('mousemove', (e) => {
+                    if(!drawing || !penMode.value) return;
+                    ctx.lineWidth = 3; ctx.lineCap = 'round';
+                    ctx.strokeStyle = penColor.value;
+                    const rect = canvas.getBoundingClientRect();
+                    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+                    ctx.stroke(); ctx.beginPath(); ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+                });
+            });
+            return { lessonTitle, currentTab, activeGoal, gSize, fullWidth, penMode, penColor, tabs, goals, clear: () => ctx.clearRect(0,0,canvas.width,canvas.height) };
+        }
+    }).mount('#app');
+</script>
+</body>
+</html>
