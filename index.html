@@ -3,80 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة المختبر الذكي - مدرسة ناصر العطية</title>
+    <title>منصة قسم الكيمياء - مدرسة ناصر العطية</title>
     <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <link href="https://fonts.googleapis.com/css2?family=Changa:wght@400;700&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --ai-bg-active: #cce9ff; 
-            --ai-text-active: #004a77; 
-            --border-color: #eef2f6;
+            --ai-primary: #0284c7; 
+            --ai-secondary: #f0f9ff; 
+            --border-color: #e2e8f0;
             --sidebar-width: 350px;
+            --text-main: #1e293b;
         }
 
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Tajawal', sans-serif; background-color: #fff; overflow: hidden; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Tajawal', sans-serif; background-color: #f8fafc; overflow: hidden; color: var(--text-main); }
         #app { display: flex; height: 100vh; width: 100vw; }
 
-        /* Sidebar */
-        .sidebar { width: var(--sidebar-width); background: #ffffff; border-left: 1px solid var(--border-color); display: flex; flex-direction: column; transition: 0.3s ease; z-index: 100; position: relative; }
+        /* القائمة الجانبية */
+        .sidebar { width: var(--sidebar-width); background: #fff; border-left: 1px solid var(--border-color); display: flex; flex-direction: column; transition: 0.3s ease; z-index: 100; position: relative; box-shadow: 4px 0 10px rgba(0,0,0,0.02); }
         .sidebar-hidden { width: 0 !important; transform: translateX(100%); opacity: 0; visibility: hidden; }
+        .header { padding: 25px 20px; text-align: center; border-bottom: 2px solid var(--ai-secondary); flex-shrink: 0; }
+        .header h2 { font-family: 'Changa', sans-serif; color: var(--ai-primary); margin: 0; font-size: 1.3rem; }
 
-        .header { padding: 20px; text-align: center; border-bottom: 1px solid var(--border-color); }
-        .header h2 { font-family: 'Changa', sans-serif; color: var(--ai-text-active); margin: 0; font-size: 1.1rem; }
+        /* قائمة الأهداف الثابتة لكل التابات */
+        .goals-list { flex: 1; padding: 15px; overflow-y: auto; border-bottom: 1px solid var(--border-color); background: #fcfdfe; }
+        .goal-card { border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 12px; cursor: pointer; background: #fff; transition: 0.2s; }
+        .goal-card:hover { border-color: var(--ai-primary); transform: translateY(-2px); }
+        .goal-card.active { border-color: var(--ai-primary); box-shadow: 0 4px 12px rgba(2, 132, 199, 0.08); }
+        .goal-label { padding: 14px; display: flex; justify-content: space-between; align-items: center; color: var(--ai-primary); font-weight: bold; font-size: 0.95rem; }
+        .goal-content { padding: 14px; border-top: 1px dashed var(--border-color); color: #475569; line-height: 1.7; font-size: 0.9rem; }
 
-        /* Goals */
-        .goals-list { flex: 1; padding: 15px; overflow-y: auto; }
-        .goal-card { border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 10px; cursor: pointer; transition: 0.3s; background: #fafafa; }
-        .goal-card.active { border-color: var(--ai-bg-active); background: #fff; }
-        .goal-label { padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; color: var(--ai-text-active); font-weight: bold; font-size: 0.85rem; }
-        .goal-content { padding: 15px; border-top: 1px dashed var(--ai-bg-active); background: #fff; border-radius: 0 0 12px 12px; }
-        .font-tool { margin-top: 10px; padding: 8px; background: var(--ai-bg-active); border-radius: 8px; display: flex; align-items: center; gap: 8px; }
-        input[type="range"] { flex: 1; accent-color: var(--ai-text-active); }
+        /* لوحة أدوات التحكم المنفصلة */
+        .toolbox-panel { background: #fff; border-top: 2px solid var(--ai-secondary); flex-shrink: 0; transition: 0.3s ease; }
+        .toolbox-header { padding: 12px 15px; background: var(--ai-secondary); color: var(--ai-primary); display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
+        .toolbox-body { padding: 20px; display: flex; flex-direction: column; gap: 18px; }
+        .collapsed-body { display: none; }
 
-        /* Content Area */
-        .content { flex: 1; display: flex; flex-direction: column; position: relative; transition: 0.3s; background: #f8f9fa; }
-        .tabs-bar { background: #fff; padding: 12px 20px; display: flex; gap: 8px; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; }
+        .preview-box { height: 50px; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+        .preview-circle { border-radius: 50%; transition: 0.1s; border: 1px solid rgba(0,0,0,0.05); }
+
+        .tool-row { display: flex; flex-direction: column; gap: 6px; }
+        .tool-row label { font-size: 0.8rem; color: var(--text-main); font-weight: 700; display: flex; justify-content: space-between; }
         
-        .tab-btn { padding: 8px 20px; border: none; background: transparent; color: #5f6368; cursor: pointer; border-radius: 50px; font-weight: 700; font-size: 0.9rem; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
-        .tab-btn.active { background-color: var(--ai-bg-active) !important; color: var(--ai-text-active) !important; }
-        .tab-btn.active::before { content: '✦'; font-size: 1rem; }
+        .action-btns { display: flex; gap: 10px; }
+        .btn-tool { flex: 1; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 0.85rem; border: 1px solid var(--border-color); transition: 0.2s; }
+        .btn-tool:active { transform: scale(0.95); }
 
-        .iframe-stage { flex: 1; padding: 15px; position: relative; }
-        iframe { width: 100%; height: 100%; border-radius: 15px; border: 1px solid var(--border-color); background: #fff; }
-        canvas { position: absolute; top: 15px; left: 15px; width: calc(100% - 30px); height: calc(100% - 30px); z-index: 50; pointer-events: none; border-radius: 15px; }
-        canvas.active { pointer-events: auto; cursor: crosshair; }
+        /* منطقة المحتوى */
+        .content { flex: 1; display: flex; flex-direction: column; position: relative; background: #f1f5f9; }
+        .tabs-bar { background: #fff; padding: 10px 20px; display: flex; gap: 8px; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; }
+        .tab-btn { padding: 10px 20px; border: 1px solid transparent; background: #f8fafc; color: #64748b; cursor: pointer; border-radius: 10px; font-weight: 700; font-size: 0.85rem; transition: 0.3s; }
+        .tab-btn.active { background-color: var(--ai-secondary); color: var(--ai-primary); border-color: var(--ai-primary); }
 
-        /* Tools */
-        .floating-tools { position: fixed; bottom: 15px; left: 15px; display: flex; gap: 8px; z-index: 1000; align-items: center; }
-        .tool-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--ai-text-active); color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .color-picker { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; padding: 0; }
-        .toggle-sidebar { position: absolute; top: 50%; right: 0; width: 18px; height: 35px; background: var(--ai-bg-active); border: none; border-radius: 4px 0 0 4px; cursor: pointer; color: var(--ai-text-active); z-index: 101; }
+        .iframe-stage { flex: 1; padding: 20px; position: relative; }
+        iframe { width: 100%; height: 100%; border-radius: 20px; border: 1px solid var(--border-color); background: #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        
+        /* مؤشر النقطة المخصص */
+        .pen-cursor { position: fixed; pointer-events: none; z-index: 9999; border-radius: 50%; transform: translate(-50%, -50%); display: none; border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 0 5px rgba(0,0,0,0.2); }
 
-        /* Admin Panel */
-        .admin-panel { position: fixed; right: 10px; bottom: 70px; width: 280px; background: #fff; border: 1px solid var(--border-color); border-radius: 15px; padding: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 2000; }
-        .admin-panel h4 { margin: 0 0 10px; color: var(--ai-text-active); font-size: 0.9rem; }
-        .admin-input { width: 100%; padding: 8px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-family: 'Tajawal'; }
-        .admin-btn { width: 100%; padding: 8px; background: var(--ai-text-active); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-bottom: 5px; }
-        .delete-btn { color: #dc2626; font-size: 0.7rem; cursor: pointer; background: #fee2e2; border: none; padding: 2px 6px; border-radius: 4px; }
+        canvas { position: absolute; top: 20px; left: 20px; width: calc(100% - 40px); height: calc(100% - 40px); z-index: 50; border-radius: 20px; pointer-events: none; }
+        canvas.active { pointer-events: auto; cursor: none; }
+
+        .toggle-sidebar { position: absolute; top: 50%; right: 0; width: 24px; height: 50px; background: #fff; border: 1px solid var(--border-color); border-radius: 12px 0 0 12px; cursor: pointer; color: var(--ai-primary); z-index: 101; display: flex; align-items: center; justify-content: center; box-shadow: -2px 0 5px rgba(0,0,0,0.05); }
+
+        /* لوحة الإدارة */
+        .floating-config { position: fixed; bottom: 25px; left: 25px; z-index: 1000; }
+        .config-btn { width: 50px; height: 50px; border-radius: 50%; background: var(--ai-primary); color: #fff; border: none; cursor: pointer; box-shadow: 0 6px 15px rgba(2, 132, 199, 0.3); font-size: 1.4rem; }
+        .admin-panel { position: fixed; right: 20px; bottom: 90px; width: 320px; background: #fff; border-radius: 20px; padding: 25px; box-shadow: 0 15px 40px rgba(0,0,0,0.15); z-index: 2000; border: 1px solid var(--border-color); }
+        .admin-input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 10px; font-family: 'Tajawal'; font-size: 0.9rem; }
+        
+        input[type="range"] { accent-color: var(--ai-primary); cursor: pointer; }
+        input[type="color"] { width: 100%; height: 40px; border: none; border-radius: 10px; cursor: pointer; background: none; }
     </style>
 </head>
 <body>
 
 <div id="app">
+    <!-- النقطة التفاعلية -->
+    <div id="pen-dot" class="pen-cursor" :style="{ width: penSize + 'px', height: penSize + 'px', backgroundColor: penColor }"></div>
+
     <aside class="sidebar" :class="{'sidebar-hidden': fullWidth}">
-        <div class="header"><h2>{{ lessonTitle }}</h2></div>
+        <div class="header">
+            <h2>قسم الكيمياء 🔬</h2>
+            <small style="color: #64748b;">مدرسة ناصر العطية</small>
+        </div>
+
+        <!-- أهداف القسم (ثابتة لكل التابات) -->
         <div class="goals-list">
-            <div v-for="(goal, i) in currentGoals" :key="i" class="goal-card" :class="{ active: activeGoal === i }">
+            <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 15px; padding-right: 5px;">أهداف القسم الثابتة:</div>
+            <div v-for="(goal, i) in globalGoals" :key="i" class="goal-card" :class="{ active: activeGoal === i }">
                 <div class="goal-label" @click="activeGoal = (activeGoal === i ? null : i)">
-                    <span>الهدف {{ i + 1 }}</span>
+                    <span>الهدف الثابت {{ i + 1 }}</span>
                     <span>{{ activeGoal === i ? '▲' : '▼' }}</span>
                 </div>
                 <div v-if="activeGoal === i" class="goal-content animate__animated animate__fadeIn">
-                    <p :style="{ fontSize: gSize + 'px', color: '#1e293b', margin: '0 0 10px 0' }">{{ goal }}</p>
-                    <div class="font-tool">
-                        <input type="range" min="14" max="40" v-model="gSize">
-                    </div>
+                    <p>{{ goal }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- لوحة التحكم المنفصلة -->
+        <div class="toolbox-panel">
+            <div class="toolbox-header" @click="toolboxExpanded = !toolboxExpanded">
+                <span>إعدادات السبورة والشرح</span>
+                <span>{{ toolboxExpanded ? '▼' : '▲' }}</span>
+            </div>
+            <div class="toolbox-body" :class="{'collapsed-body': !toolboxExpanded}">
+                <div class="preview-box">
+                    <div class="preview-circle" :style="{ width: penSize + 'px', height: penSize + 'px', backgroundColor: penColor }"></div>
+                </div>
+                <div class="tool-row">
+                    <label>حجم الخط <span>{{ penSize }}px</span></label>
+                    <input type="range" min="2" max="60" v-model="penSize">
+                </div>
+                <div class="tool-row">
+                    <label>لون الكتابة</label>
+                    <input type="color" v-model="penColor">
+                </div>
+                <div class="action-btns">
+                    <button class="btn-tool" style="background:#fff1f2; color:#e11d48;" @click="clearCanvas">🗑️ مسح</button>
+                    <button class="btn-tool" :style="{ background: penMode ? '#0284c7' : '#f8fafc', color: penMode ? '#fff' : '#64748b' }" @click="penMode = !penMode">
+                        {{ penMode ? 'إيقاف القلم' : 'تفعيل القلم' }}
+                    </button>
                 </div>
             </div>
         </div>
@@ -84,106 +133,133 @@
 
     <main class="content">
         <button class="toggle-sidebar" @click="fullWidth = !fullWidth">{{ fullWidth ? '◀' : '▶' }}</button>
+        
         <nav class="tabs-bar">
-            <div v-for="(tab, i) in tabs" :key="i" style="display:flex; align-items:center; gap:4px;">
-                <button @click="currentTab = i" :class="['tab-btn', { active: currentTab === i }]">
-                    {{ tab.name }}
-                </button>
-                <button v-if="showAdmin" class="delete-btn" @click="removeTab(i)">حذف</button>
+            <div v-for="(tab, i) in tabs" :key="i" style="display:flex; align-items:center;">
+                <button @click="currentTab = i" :class="['tab-btn', { active: currentTab === i }]">{{ tab.name }}</button>
+                <button v-if="showAdmin" style="margin-right: -10px; color:red; border:none; background:none; cursor:pointer; z-index:1;" @click="removeTab(i)">✕</button>
             </div>
         </nav>
+        
         <div class="iframe-stage">
             <iframe v-if="tabs.length > 0" :src="tabs[currentTab].url" allowfullscreen></iframe>
-            <div v-else style="display:flex; justify-content:center; align-items:center; height:100%; color:#999;">لا توجد أنشطة مضافة</div>
             <canvas id="canvas" :class="{ active: penMode }"></canvas>
         </div>
     </main>
 
-    <!-- Admin Panel Control -->
-    <div v-if="showAdmin" class="admin-panel animate__animated animate__slideInUp">
-        <h4>إضافة تبويب جديد</h4>
-        <input class="admin-input" v-model="newTab.name" placeholder="اسم النشاط">
-        <input class="admin-input" v-model="newTab.url" placeholder="رابط النشاط">
-        <textarea class="admin-input" v-model="newTab.goalsStr" placeholder="الأهداف (هدف في كل سطر)" rows="3"></textarea>
-        <button class="admin-btn" @click="addTab">إضافة ✅</button>
-        <button class="admin-btn" style="background:#64748b" @click="showAdmin = false">إغلاق</button>
+    <!-- لوحة التحكم الإدارية -->
+    <div class="floating-config">
+        <button class="config-btn" @click="showAdmin = !showAdmin">⚙️</button>
     </div>
 
-    <!-- Floating Tools -->
-    <div class="floating-tools">
-        <button class="tool-btn" @click="showAdmin = !showAdmin">⚙️</button>
-        <input type="color" v-model="penColor" class="color-picker">
-        <button class="tool-btn" :style="{ background: penMode ? '#e11d48' : '' }" @click="penMode = !penMode">✏️</button>
-        <button class="tool-btn" @click="clear">🗑️</button>
+    <div v-if="showAdmin" class="admin-panel animate__animated animate__fadeInUp">
+        <h4 style="margin:0 0 15px; color:var(--ai-primary);">إعدادات المنصة</h4>
+        
+        <div style="margin-bottom:15px; padding-bottom:15px; border-bottom:1px solid #eee;">
+            <label style="font-size:0.8rem; font-weight:bold;">تعديل الأهداف العامة (لكل التابات):</label>
+            <textarea class="admin-input" v-model="goalsInput" placeholder="اكتب الأهداف.. كل هدف في سطر" rows="4"></textarea>
+            <button class="btn-tool" style="width:100%; background:#0284c7; color:#fff;" @click="updateGlobalGoals">تحديث الأهداف 🎯</button>
+        </div>
+
+        <label style="font-size:0.8rem; font-weight:bold;">إضافة تاب (نشاط) جديد:</label>
+        <input class="admin-input" v-model="newTab.name" placeholder="اسم النشاط">
+        <input class="admin-input" v-model="newTab.url" placeholder="رابط النشاط">
+        <button class="btn-tool" style="width:100%; background:#10b981; color:#fff;" @click="addTab">إضافة النشاط ✅</button>
     </div>
 </div>
 
 <script>
-    const { createApp, ref, onMounted, watch, computed } = Vue;
+    const { createApp, ref, onMounted, watch } = Vue;
+
     createApp({
         setup() {
-            // تحميل البيانات من LocalStorage أو استخدام الافتراضي
-            const savedTabs = JSON.parse(localStorage.getItem('smart_lab_tabs')) || [
-                { name: 'المختبر', url: 'https://phet.colorado.edu/sims/html/build-an-atom/latest/build-an-atom_all.html?locale=ar', goals: ['تحديد تركيب النواة بدقة.', 'شرح الفرق بين النظائر.'] }
-            ];
+            // مفاتيح التخزين
+            const TABS_KEY = 'chem_tabs_v7';
+            const GOALS_KEY = 'chem_goals_v7';
 
-            const lessonTitle = ref('منصة ناصر العطية التفاعلية 🔬');
-            const tabs = ref(savedTabs);
+            // بيانات التابات
+            const tabs = ref(JSON.parse(localStorage.getItem(TABS_KEY)) || [
+                { name: 'بناء الذرة', url: 'https://phet.colorado.edu/sims/html/build-an-atom/latest/build-an-atom_all.html?locale=ar' },
+                { name: 'المحاليل', url: 'https://phet.colorado.edu/sims/html/molarity/latest/molarity_all.html?locale=ar' }
+            ]);
+
+            // الأهداف العامة (ثابتة للكل)
+            const globalGoals = ref(JSON.parse(localStorage.getItem(GOALS_KEY)) || [
+                'التعرف على المفاهيم الكيميائية الأساسية',
+                'تطبيق مهارات الاستقصاء العلمي',
+                'ربط التجارب النظرية بالواقع العملي'
+            ]);
+
             const currentTab = ref(0);
             const activeGoal = ref(null);
-            const gSize = ref(18);
             const fullWidth = ref(false);
-            const penMode = ref(false);
-            const penColor = ref('#004a77');
             const showAdmin = ref(false);
-            const newTab = ref({ name: '', url: '', goalsStr: '' });
+            const toolboxExpanded = ref(true);
+            const goalsInput = ref(globalGoals.value.join('\n'));
+            
+            const penSize = ref(8);
+            const penColor = ref('#0284c7');
+            const penMode = ref(false);
+            const newTab = ref({ name: '', url: '' });
 
-            const currentGoals = computed(() => {
-                return tabs.value[currentTab.value]?.goals || [];
-            });
+            // مراقبة التغييرات لحفظها
+            watch(tabs, (v) => localStorage.setItem(TABS_KEY, JSON.stringify(v)), { deep: true });
+            watch(globalGoals, (v) => localStorage.setItem(GOALS_KEY, JSON.stringify(v)), { deep: true });
 
-            // حفظ التعديلات تلقائياً
-            watch(tabs, (newVal) => {
-                localStorage.setItem('smart_lab_tabs', JSON.stringify(newVal));
-            }, { deep: true });
+            const updateGlobalGoals = () => {
+                globalGoals.value = goalsInput.value.split('\n').filter(g => g.trim());
+                alert('تم توحيد الأهداف في جميع الأنشطة!');
+            };
 
             const addTab = () => {
                 if (newTab.value.name && newTab.value.url) {
-                    const goalsArray = newTab.value.goalsStr.split('\n').filter(g => g.trim() !== '');
-                    tabs.value.push({ name: newTab.value.name, url: newTab.value.url, goals: goalsArray });
-                    newTab.value = { name: '', url: '', goalsStr: '' };
+                    tabs.value.push({ ...newTab.value });
+                    newTab.value = { name: '', url: '' };
                 }
             };
 
-            const removeTab = (index) => {
-                if (confirm('هل تريد حذف هذا التبويب؟')) {
-                    tabs.value.splice(index, 1);
-                    if (currentTab.value >= tabs.value.length) currentTab.value = 0;
-                }
-            };
+            const removeTab = (i) => { if(confirm('حذف النشاط؟')) tabs.value.splice(i, 1); };
 
-            let ctx, canvas;
+            let ctx, canvas, penDot;
             onMounted(() => {
                 canvas = document.getElementById('canvas');
+                penDot = document.getElementById('pen-dot');
                 ctx = canvas.getContext('2d');
-                canvas.width = canvas.offsetWidth;
-                canvas.height = canvas.offsetHeight;
+                
+                const resize = () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; };
+                resize(); window.addEventListener('resize', resize);
+
+                window.addEventListener('mousemove', (e) => {
+                    if (penMode.value) {
+                        const rect = canvas.getBoundingClientRect();
+                        if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                            penDot.style.display = 'block';
+                            penDot.style.left = e.clientX + 'px';
+                            penDot.style.top = e.clientY + 'px';
+                        } else { penDot.style.display = 'none'; }
+                    } else { penDot.style.display = 'none'; }
+                });
+
                 let drawing = false;
-                canvas.addEventListener('mousedown', () => drawing = true);
+                canvas.addEventListener('mousedown', () => { if(penMode.value) drawing = true; });
                 canvas.addEventListener('mouseup', () => { drawing = false; ctx.beginPath(); });
                 canvas.addEventListener('mousemove', (e) => {
                     if(!drawing || !penMode.value) return;
-                    ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.strokeStyle = penColor.value;
+                    ctx.lineWidth = penSize.value;
+                    ctx.lineCap = 'round';
+                    ctx.strokeStyle = penColor.value;
                     const rect = canvas.getBoundingClientRect();
                     ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-                    ctx.stroke(); ctx.beginPath(); ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
                 });
             });
 
             return { 
-                lessonTitle, tabs, currentTab, activeGoal, gSize, fullWidth, 
-                penMode, penColor, showAdmin, newTab, currentGoals,
-                addTab, removeTab, clear: () => ctx.clearRect(0,0,canvas.width,canvas.height) 
+                tabs, currentTab, activeGoal, fullWidth, showAdmin, toolboxExpanded,
+                penSize, penColor, penMode, newTab, globalGoals, goalsInput,
+                updateGlobalGoals, addTab, removeTab, clearCanvas: () => ctx.clearRect(0,0,canvas.width,canvas.height)
             };
         }
     }).mount('#app');
